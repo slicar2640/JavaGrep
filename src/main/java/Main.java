@@ -1,4 +1,4 @@
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Main {
@@ -8,7 +8,7 @@ public class Main {
       System.exit(1);
     }
 
-    String pattern = args[1];  
+    String pattern = args[1];
     Scanner scanner = new Scanner(System.in);
     String inputLine = scanner.nextLine();
 
@@ -17,13 +17,30 @@ public class Main {
     } else {
         System.exit(1);
     }
+    scanner.close();
   }
 
   public static boolean matchPattern(String inputLine, String pattern) {
-    if (pattern.length() == 1) {
-      return inputLine.contains(pattern);
-    } else {
-      throw new RuntimeException("Unhandled pattern: " + pattern);
+    ArrayList<RegexMatcher> regex = new ArrayList<>();
+    for(int i = 0; i < pattern.length(); i++) {
+      if(pattern.charAt(i) == '\\') {
+        i++;
+        switch (pattern.charAt(i)) {
+          case 'd':
+            regex.add(new RangeMatcher("0123456789"));
+            break;
+          default:
+            break;
+        }
+      } else {
+        regex.add(new CharacterMatcher(pattern.charAt(i)));
+      }
     }
+    for(RegexMatcher matcher : regex) {
+      if(matcher.match(inputLine) >= 0) {
+        return true;
+      }
+    }
+    return false;
   }
 }
