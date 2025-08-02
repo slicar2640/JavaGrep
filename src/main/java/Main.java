@@ -27,20 +27,25 @@ public class Main {
         i++;
         switch (pattern.charAt(i)) {
           case 'd':
-            regex.add(RangeMatcher.fromRanges("0-9"));
+            regex.add(new RangeMatcher("0-9"));
             break;
           case 'w':
-            regex.add(RangeMatcher.fromRanges("a-z", "A-Z", "0-9", "_"));
+            regex.add(new RangeMatcher("a-z", "A-Z", "0-9", "_"));
           break;
           default:
             break;
         }
+      } else if(pattern.charAt(i) == '[') {
+        int endIndex = pattern.indexOf(']', i);
+        String sub = pattern.substring(i + 1, endIndex);
+        regex.add(new RangeMatcher(sub)); //Change to handle a-c, \d, etc.
+        i = endIndex;
       } else {
         regex.add(new CharacterMatcher(pattern.charAt(i)));
       }
     }
     for(RegexMatcher matcher : regex) {
-      if(matcher.match(inputLine) >= 0) {
+      if(matcher.match(inputLine) >= 0) { //Change for sequential
         return true;
       }
     }
