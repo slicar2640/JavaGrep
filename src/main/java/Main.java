@@ -49,11 +49,13 @@ public class Main {
         regex.add(new CharacterMatcher(pattern.charAt(i)));
       }
     }
+    int testIndex = regex.get(0).match(inputLine);
     for (RegexMatcher matcher : regex) {
-      if (matcher.match(inputLine) >= 0) { // Change for sequential
-        return true;
+      if(testIndex == -1 || !matcher.test(inputLine.charAt(testIndex))) {
+        return false;
       }
+      testIndex++;
     }
-    return false;
+    return true;
   }
 }
