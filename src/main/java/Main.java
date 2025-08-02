@@ -27,8 +27,11 @@ public class Main {
         i++;
         switch (pattern.charAt(i)) {
           case 'd':
-            regex.add(new RangeMatcher("0123456789"));
+            regex.add(RangeMatcher.fromRanges("0-9"));
             break;
+          case 'w':
+            regex.add(RangeMatcher.fromRanges("a-z", "A-Z", "0-9", "_"));
+          break;
           default:
             break;
         }
