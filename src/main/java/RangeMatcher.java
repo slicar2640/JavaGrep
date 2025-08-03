@@ -1,6 +1,6 @@
 import java.util.HashSet;
 
-public class RangeMatcher extends RegexMatcher {
+public class RangeMatcher implements RegexMatcher {
   static final String lowercaseAlphabet = "abcdefghijklmnopqrstuvwxyz";
   static final String uppercaseAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   static final String digits = "0123456789";

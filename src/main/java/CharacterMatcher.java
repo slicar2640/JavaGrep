@@ -1,4 +1,4 @@
-public class CharacterMatcher extends RegexMatcher {
+public class CharacterMatcher implements RegexMatcher {
   char character;
 
   public CharacterMatcher(char character) {

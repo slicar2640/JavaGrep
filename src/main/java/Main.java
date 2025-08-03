@@ -22,6 +22,7 @@ public class Main {
 
   public static boolean matchPattern(String inputLine, String pattern) {
     ArrayList<RegexMatcher> regex = new ArrayList<>();
+    boolean startAtStart = false;
     for (int i = 0; i < pattern.length(); i++) {
       if (pattern.charAt(i) == '\\') {
         i++;
@@ -45,13 +46,15 @@ public class Main {
           regex.add(new RangeMatcher(sub)); // Change to handle a-c, \d, etc.
         }
         i = endIndex;
+      } else if(pattern.charAt(i) == '^') {
+        startAtStart = true;
       } else {
         regex.add(new CharacterMatcher(pattern.charAt(i)));
       }
     }
     int startMatchIndex = -1;
     while (true) {
-      int testIndex = regex.get(0).match(inputLine, startMatchIndex + 1);
+      int testIndex = startAtStart ? 0 : regex.get(0).match(inputLine, startMatchIndex + 1);
       startMatchIndex = testIndex;
       boolean matches = true;
       for (RegexMatcher matcher : regex) {
@@ -64,7 +67,7 @@ public class Main {
       if (matches) {
         return true;
       } else {
-        if (testIndex == -1 || testIndex >= inputLine.length()) {
+        if (testIndex == -1 || testIndex >= inputLine.length() || startAtStart) {
           return false;
         }
       }
