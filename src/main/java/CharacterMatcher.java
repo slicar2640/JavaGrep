@@ -1,8 +1,14 @@
-public class CharacterMatcher implements RegexMatcher {
+public class CharacterMatcher extends RegexMatcher {
   char character;
 
   public CharacterMatcher(char character) {
     this.character = character;
+    repeat = MatchRepeat.ONE;
+  }
+
+  public CharacterMatcher(char character, MatchRepeat repeat) {
+    this.character = character;
+    this.repeat = repeat;
   }
 
   public boolean test(char input) {

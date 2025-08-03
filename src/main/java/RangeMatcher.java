@@ -1,12 +1,13 @@
 import java.util.HashSet;
 
-public class RangeMatcher implements RegexMatcher {
+public class RangeMatcher extends RegexMatcher {
   static final String lowercaseAlphabet = "abcdefghijklmnopqrstuvwxyz";
   static final String uppercaseAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   static final String digits = "0123456789";
   HashSet<Character> matchedChars = new HashSet<>();
 
-  public RangeMatcher(String... ranges) {
+  public RangeMatcher(MatchRepeat repeat, String... ranges) {
+    this.repeat = repeat;
     String finalRange = "";
     for (String range : ranges) {
       if (range.contains("-")) {
@@ -34,6 +35,10 @@ public class RangeMatcher implements RegexMatcher {
     for(char c : charArray) {
       matchedChars.add(c);
     }
+  }
+
+  public RangeMatcher(String... ranges) {
+    this(MatchRepeat.ONE, ranges);
   }
 
   public boolean test(char input) {

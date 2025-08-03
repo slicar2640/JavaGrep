@@ -3,6 +3,10 @@ public class NegativeRangeMatcher extends RangeMatcher {
     super(ranges);
   }
 
+  public NegativeRangeMatcher(MatchRepeat repeat, String... ranges) {
+    super(repeat, ranges);
+  }
+
   @Override
   public boolean test(char input) {
     return !matchedChars.contains(input);

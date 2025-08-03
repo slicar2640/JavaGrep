@@ -47,28 +47,65 @@ public class Main {
           regex.add(new RangeMatcher(sub)); // Change to handle a-c, \d, etc.
         }
         i = endIndex;
-      } else if(pattern.charAt(i) == '^') {
+      } else if (pattern.charAt(i) == '^') {
         startAtStart = true;
-      } else if(pattern.charAt(i) == '$') {
+      } else if (pattern.charAt(i) == '$') {
         endAtEnd = true;
       } else {
-        regex.add(new CharacterMatcher(pattern.charAt(i)));
+        if (i + 1 < pattern.length() && pattern.charAt(i + 1) == '+') {
+          regex.add(new CharacterMatcher(pattern.charAt(i), RegexMatcher.MatchRepeat.ONEORMORE));
+          i++;
+        } else {
+          regex.add(new CharacterMatcher(pattern.charAt(i)));
+        }
       }
     }
-    int startMatchIndex = -1;
+    return checkMatch(inputLine, regex, 0, 0, startAtStart, endAtEnd);
+  }
+
+  private static boolean checkMatch(String inputLine, ArrayList<RegexMatcher> regex, int startPosition,
+      int startMatcher, boolean startAtStart, boolean endAtEnd) {
+    int startMatchIndex = startPosition - 1;
     while (true) {
-      int testIndex = startAtStart ? 0 : regex.get(0).match(inputLine, startMatchIndex + 1);
+      int testIndex = startAtStart ? startPosition : regex.get(startMatcher).match(inputLine, startMatchIndex + 1);
       startMatchIndex = testIndex;
       boolean matches = true;
-      for (RegexMatcher matcher : regex) {
-        if (testIndex == -1 || testIndex >= inputLine.length() || !matcher.test(inputLine.charAt(testIndex))) {
-          matches = false;
-          break;
+      matcherLoop: for (int i = startMatcher; i < regex.size(); i++) {
+        RegexMatcher matcher = regex.get(i);
+        switch (matcher.repeat) {
+          case ONE:
+            if (testIndex == -1 || testIndex >= inputLine.length() || !matcher.test(inputLine.charAt(testIndex))) {
+              matches = false;
+              break matcherLoop;
+            }
+            testIndex++;
+            break;
+          case ONEORMORE:
+            if (testIndex == -1) { // Should only happen if this is first and doesn't match anywhere
+              matches = false;
+              break matcherLoop;
+            }
+            int startOfMatch = testIndex;
+            for (int j = startOfMatch; j < inputLine.length(); j++) {
+              if (matcher.test(inputLine.charAt(j))) {
+                if (checkMatch(inputLine, regex, j + 1, i + 1, true, endAtEnd)) {
+                  testIndex = j + 1;
+                  continue matcherLoop;
+                }
+              } else {
+                if (j - startOfMatch == 0) {
+                  matches = false;
+                  break matcherLoop;
+                }
+              }
+            }
+            break;
+          case ZEROORMORE:
+            break;
         }
-        testIndex++;
       }
       if (matches) {
-        if(endAtEnd) {
+        if (endAtEnd) {
           return testIndex == inputLine.length();
         } else {
           return true;
