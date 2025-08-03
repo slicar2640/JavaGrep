@@ -23,6 +23,7 @@ public class Main {
   public static boolean matchPattern(String inputLine, String pattern) {
     ArrayList<RegexMatcher> regex = new ArrayList<>();
     boolean startAtStart = false;
+    boolean endAtEnd = false;
     for (int i = 0; i < pattern.length(); i++) {
       if (pattern.charAt(i) == '\\') {
         i++;
@@ -48,6 +49,8 @@ public class Main {
         i = endIndex;
       } else if(pattern.charAt(i) == '^') {
         startAtStart = true;
+      } else if(pattern.charAt(i) == '$') {
+        endAtEnd = true;
       } else {
         regex.add(new CharacterMatcher(pattern.charAt(i)));
       }
@@ -65,7 +68,11 @@ public class Main {
         testIndex++;
       }
       if (matches) {
-        return true;
+        if(endAtEnd) {
+          return testIndex == inputLine.length();
+        } else {
+          return true;
+        }
       } else {
         if (testIndex == -1 || testIndex >= inputLine.length() || startAtStart) {
           return false;
