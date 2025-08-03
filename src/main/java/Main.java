@@ -49,13 +49,25 @@ public class Main {
         regex.add(new CharacterMatcher(pattern.charAt(i)));
       }
     }
-    int testIndex = regex.get(0).match(inputLine);
-    for (RegexMatcher matcher : regex) {
-      if(testIndex == -1 || !matcher.test(inputLine.charAt(testIndex))) {
-        return false;
+    int startMatchIndex = -1;
+    while (true) {
+      int testIndex = regex.get(0).match(inputLine, startMatchIndex + 1);
+      startMatchIndex = testIndex;
+      boolean matches = true;
+      for (RegexMatcher matcher : regex) {
+        if (testIndex == -1 || testIndex >= inputLine.length() || !matcher.test(inputLine.charAt(testIndex))) {
+          matches = false;
+          break;
+        }
+        testIndex++;
       }
-      testIndex++;
+      if (matches) {
+        return true;
+      } else {
+        if (testIndex == -1 || testIndex >= inputLine.length()) {
+          return false;
+        }
+      }
     }
-    return true;
   }
 }

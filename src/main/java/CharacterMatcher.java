@@ -12,4 +12,8 @@ public class CharacterMatcher extends RegexMatcher {
   public int match(String input) {
     return input.indexOf(character);
   }
+
+  public int match(String input, int startIndex) {
+    return input.indexOf(character, startIndex);
+  }
 }

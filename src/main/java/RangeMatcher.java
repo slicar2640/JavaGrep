@@ -1,8 +1,10 @@
+import java.util.HashSet;
+
 public class RangeMatcher extends RegexMatcher {
   static final String lowercaseAlphabet = "abcdefghijklmnopqrstuvwxyz";
   static final String uppercaseAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   static final String digits = "0123456789";
-  String matchedChars;
+  HashSet<Character> matchedChars = new HashSet<>();
 
   public RangeMatcher(String... ranges) {
     String finalRange = "";
@@ -28,25 +30,31 @@ public class RangeMatcher extends RegexMatcher {
         finalRange += range;
       }
     }
-    matchedChars = finalRange;
+    char[] charArray = finalRange.toCharArray();
+    for(char c : charArray) {
+      matchedChars.add(c);
+    }
   }
 
   public boolean test(char input) {
-    return matchedChars.contains("" + input);
+    return matchedChars.contains(input);
   }
 
   public int match(String input) {
-    int firstIndex = Integer.MAX_VALUE;
-    for (int i = 0; i < matchedChars.length(); i++) {
-      int index = input.indexOf(matchedChars.charAt(i));
-      if (index >= 0) {
-        firstIndex = Math.min(firstIndex, index);
+    for(int i = 0; i < input.length(); i++) {
+      if(matchedChars.contains(input.charAt(i))) {
+        return i;
       }
     }
-    if (firstIndex == Integer.MAX_VALUE) {
-      return -1;
-    } else {
-      return firstIndex;
+    return -1;
+  }
+
+  public int match(String input, int startIndex) {
+    for(int i = startIndex; i < input.length(); i++) {
+      if(matchedChars.contains(input.charAt(i))) {
+        return i;
+      }
     }
+    return -1;
   }
 }
