@@ -25,7 +25,8 @@ public class Main {
     boolean startAtStart = false;
     boolean endAtEnd = false;
     for (int i = 0; i < pattern.length(); i++) {
-      if (pattern.charAt(i) == '\\') {
+      char thisChar = pattern.charAt(i);
+      if (thisChar == '\\') {
         i++;
         switch (pattern.charAt(i)) {
           case 'd':
@@ -37,7 +38,7 @@ public class Main {
           default:
             break;
         }
-      } else if (pattern.charAt(i) == '[') {
+      } else if (thisChar == '[') {
         int endIndex = pattern.indexOf(']', i);
         if (pattern.charAt(i + 1) == '^') {
           String sub = pattern.substring(i + 2, endIndex);
@@ -47,19 +48,29 @@ public class Main {
           regex.add(new RangeMatcher(sub)); // Change to handle a-c, \d, etc.
         }
         i = endIndex;
-      } else if (pattern.charAt(i) == '^') {
+      } else if (thisChar == '^') {
         startAtStart = true;
-      } else if (pattern.charAt(i) == '$') {
+      } else if (thisChar == '$') {
         endAtEnd = true;
-      } else {
+      } else if (thisChar == '.') {
         if (i + 1 < pattern.length() && pattern.charAt(i + 1) == '+') {
-          regex.add(new CharacterMatcher(pattern.charAt(i), RegexMatcher.MatchRepeat.ONEORMORE));
+          regex.add(new RegexMatcher(RegexMatcher.MatchRepeat.ONEORMORE));
           i++;
         } else if (i + 1 < pattern.length() && pattern.charAt(i + 1) == '?') {
-          regex.add(new CharacterMatcher(pattern.charAt(i), RegexMatcher.MatchRepeat.ZEROORONE));
+          regex.add(new RegexMatcher(RegexMatcher.MatchRepeat.ZEROORONE));
           i++;
         } else {
-          regex.add(new CharacterMatcher(pattern.charAt(i)));
+          regex.add(new RegexMatcher());
+        }
+      } else {
+        if (i + 1 < pattern.length() && pattern.charAt(i + 1) == '+') {
+          regex.add(new CharacterMatcher(thisChar, RegexMatcher.MatchRepeat.ONEORMORE));
+          i++;
+        } else if (i + 1 < pattern.length() && pattern.charAt(i + 1) == '?') {
+          regex.add(new CharacterMatcher(thisChar, RegexMatcher.MatchRepeat.ZEROORONE));
+          i++;
+        } else {
+          regex.add(new CharacterMatcher(thisChar));
         }
       }
     }
