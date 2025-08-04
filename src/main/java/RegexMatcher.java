@@ -5,7 +5,7 @@ public abstract class RegexMatcher {
   public enum MatchRepeat {
     ONE,
     ONEORMORE,
-    ZEROORMORE
+    ZEROORONE
   }
   MatchRepeat repeat;
 }

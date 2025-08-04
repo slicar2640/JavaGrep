@@ -55,6 +55,9 @@ public class Main {
         if (i + 1 < pattern.length() && pattern.charAt(i + 1) == '+') {
           regex.add(new CharacterMatcher(pattern.charAt(i), RegexMatcher.MatchRepeat.ONEORMORE));
           i++;
+        } else if (i + 1 < pattern.length() && pattern.charAt(i + 1) == '?') {
+          regex.add(new CharacterMatcher(pattern.charAt(i), RegexMatcher.MatchRepeat.ZEROORONE));
+          i++;
         } else {
           regex.add(new CharacterMatcher(pattern.charAt(i)));
         }
@@ -100,7 +103,11 @@ public class Main {
               }
             }
             break;
-          case ZEROORMORE:
+          case ZEROORONE:
+            boolean worksWithOne = testIndex != -1 && matcher.test(inputLine.charAt(i));
+            if (worksWithOne && checkMatch(inputLine, regex, testIndex + 1, startMatcher + 1, true, endAtEnd)) {
+              testIndex++;
+            }
             break;
         }
       }
