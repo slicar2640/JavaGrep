@@ -107,7 +107,6 @@ class Regex extends RegexMatcher {
         return 0;
       }
       int idx = matchSequences.get(i).getMatcher(seqOff).firstMatch(input, startIndex);
-      System.out.println(startIndex + " " + idx + (idx >= 0 ? (" " + input.charAt(idx)) : ""));
       if (idx != -1) {
         sequenceIndex = i;
         return idx;
@@ -121,22 +120,17 @@ class Regex extends RegexMatcher {
   }
 
   public int match(String input, int startIndex, int seqOff, Regex parent) {
-    System.out.println("Hi there!" + toString());
     sequenceOffset = seqOff;
 
     int inputIndex = firstMatch(input, startIndex, sequenceOffset);
-    System.out.println("ii " + inputIndex);
     if (inputIndex == -1) {
       return -1;
     }
 
     sequenceLoop: while (sequenceIndex < matchSequences.size()) {
-      System.out.println("SI " + sequenceIndex);
-      System.out.println("s " + sequenceToString(sequenceIndex));
       while (sequenceOffset < currentSequence().matcherList.size() && inputIndex < input.length()) {
         RegexMatcher matcher = currentSequence().getMatcher(sequenceOffset);
         int newIndex = matcher.match(input, inputIndex, this);
-        System.out.println("n " + newIndex);
         if (newIndex == -1) {
           if (sequenceIndex < matchSequences.size() - 1) {
             sequenceIndex++;
@@ -148,7 +142,6 @@ class Regex extends RegexMatcher {
         } else {
           inputIndex = newIndex;
           sequenceOffset++;
-          System.out.println("o " + sequenceOffset);
         }
       }
       if (sequenceOffset >= currentSequence().matcherList.size()) {

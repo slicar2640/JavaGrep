@@ -82,8 +82,6 @@ public class CharacterMatcher extends RegexMatcher {
   }
 
   public int match(String input, int startIndex, Regex parent) {
-    System.out.println("char match " + startIndex + " " + input.charAt(startIndex));
-    System.out.println(repeat.toString());
     switch (repeat) {
       case ONE:
         if (test(input.charAt(startIndex))) {
@@ -94,13 +92,11 @@ public class CharacterMatcher extends RegexMatcher {
 
       case ONEORMORE:
         for (int i = startIndex; i < input.length(); i++) {
-          System.out.println("L " + i + " " + input.charAt(i));
           if (!test(input.charAt(startIndex))) {
             break;
           }
           if (i < input.length() - 1
               && parent.match(input, i + 1, parent.currentSequence().matcherList.indexOf(this) + 1, null) >= 0) {
-            System.out.println(i + 1);
             return i + 1;
           }
         }
@@ -108,16 +104,12 @@ public class CharacterMatcher extends RegexMatcher {
 
       case ZEROORONE:
         if (parent.match(input, startIndex, parent.currentSequence().matcherList.indexOf(this) + 1, null) >= 0) {
-          System.out.println("Marius");
           return startIndex;
         } else {
-          System.out.println("Enjolras");
           parent.sequenceOffset--;
           if (test(input.charAt(startIndex))) {
-            System.out.println("red");
             return startIndex + 1;
           } else {
-            System.out.println("black");
             return -1;
           }
         }
