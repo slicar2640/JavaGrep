@@ -21,6 +21,6 @@ public class Main {
 
   public static boolean matchPattern(String inputLine, String pattern) {
     Regex regex = new Regex(pattern);
-    return regex.match(inputLine, 0, null) >= 0;
+    return regex.initialMatch(inputLine).isValid;
   }
 }

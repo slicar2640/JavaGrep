@@ -21,6 +21,14 @@ public class MatcherSequence {
     return matcherList.get(index);
   }
 
+  public int size() {
+    return matcherList.size();
+  }
+
+  public int indexOf(RegexMatcher matcher) {
+    return matcherList.indexOf(matcher);
+  }
+
   public String toString() {
     String ret = startAtStart ? "^" : "";
     for(RegexMatcher matcher : matcherList) {

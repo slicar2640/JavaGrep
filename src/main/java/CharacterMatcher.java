@@ -1,23 +1,18 @@
 import java.util.HashSet;
 
-public class CharacterMatcher extends RegexMatcher {
+public class CharacterMatcher implements RegexMatcher {
   static final String lowercaseAlphabet = "abcdefghijklmnopqrstuvwxyz";
   static final String uppercaseAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   static final String digits = "0123456789";
-
-  public enum MatchRepeat {
-    ONE,
-    ONEORMORE,
-    ZEROORONE
-  }
-
-  MatchRepeat repeat;
   HashSet<Character> matchedChars = new HashSet<>();
   boolean isNegative;
+  Regex parent;
+  RegexMatcher.MatchRepeat repeat;
 
-  public CharacterMatcher(String chars, MatchRepeat repeat, boolean negative) {
+  public CharacterMatcher(String chars, RegexMatcher.MatchRepeat repeat, boolean negative, Regex parent) {
     this.repeat = repeat;
     this.isNegative = negative;
+    this.parent = parent;
     String finalRange = "";
     for (int i = 0; i < chars.length(); i++) {
       char thisChar = chars.charAt(i);
@@ -56,23 +51,23 @@ public class CharacterMatcher extends RegexMatcher {
     }
   }
 
-  public CharacterMatcher(String chars, boolean negative) {
-    this(chars, MatchRepeat.ONE, negative);
+  public CharacterMatcher(String chars, boolean negative, Regex parent) {
+    this(chars, RegexMatcher.MatchRepeat.ONE, negative, parent);
   }
 
-  public CharacterMatcher(String chars, MatchRepeat repeat) {
-    this(chars, repeat, false);
+  public CharacterMatcher(String chars, RegexMatcher.MatchRepeat repeat, Regex parent) {
+    this(chars, repeat, false, parent);
   }
 
-  public CharacterMatcher(String chars) {
-    this(chars, MatchRepeat.ONE, false);
+  public CharacterMatcher(String chars, Regex parent) {
+    this(chars, RegexMatcher.MatchRepeat.ONE, false, parent);
   }
 
   public boolean test(char input) {
     return matchedChars.contains(input) ^ isNegative;
   }
 
-  public int firstMatch(String input, int startIndex) {
+  public int firstMatchStart(String input, int startIndex) {
     for (int i = startIndex; i < input.length(); i++) {
       if (test(input.charAt(i))) {
         return i;
@@ -81,13 +76,13 @@ public class CharacterMatcher extends RegexMatcher {
     return -1;
   }
 
-  public int match(String input, int startIndex, Regex parent) {
+  public Match match(String input, int startIndex) {
     switch (repeat) {
       case ONE:
         if (test(input.charAt(startIndex))) {
-          return startIndex + 1;
+          return new Match(input, startIndex, startIndex);
         } else {
-          return -1;
+          return Match.invalid();
         }
 
       case ONEORMORE:
@@ -95,34 +90,49 @@ public class CharacterMatcher extends RegexMatcher {
           if (!test(input.charAt(startIndex))) {
             break;
           }
-          if (i < input.length() - 1
-              && parent.match(input, i + 1, parent.currentSequence().matcherList.indexOf(this) + 1, null) >= 0) {
-            return i + 1;
+          if (lastOfParentSequence()) {
+
+          } else {
+            if (i < input.length() - 1
+                && parent.lookAhead(input, i + 1, parent.currentSequence().indexOf(this) + 1)) {
+              return new Match(input, startIndex, i);
+            }
           }
         }
-        return -1;
+        return Match.invalid();
 
       case ZEROORONE:
-        if (parent.match(input, startIndex, parent.currentSequence().matcherList.indexOf(this) + 1, null) >= 0) {
-          return startIndex;
-        } else {
-          parent.sequenceOffset--;
+        if (lastOfParentSequence()) {
           if (test(input.charAt(startIndex))) {
-            return startIndex + 1;
+            return new Match(input, startIndex, startIndex);
           } else {
-            return -1;
+            return Match.empty(startIndex);
+          }
+        } else {
+          if (parent.lookAhead(input, startIndex, parent.currentSequence().indexOf(this) + 1)) {
+            return Match.empty(startIndex);
+          } else {
+            if (test(input.charAt(startIndex))) {
+              return new Match(input, startIndex, startIndex);
+            } else {
+              return Match.invalid();
+            }
           }
         }
 
       default:
         System.out.println(
             "Invalid repeat property [" + repeat + "] on CharacterMatcher with characters " + getMatchedCharsString());
-        return -1;
+        return Match.invalid();
     }
   }
 
+  private boolean lastOfParentSequence() {
+    return parent.currentSequence().indexOf(this) == parent.currentSequence().size() - 1;
+  }
+
   String getMatchedCharsString() {
-    String ret = isNegative ? "^" : "";
+    String ret = isNegative ? "+" : "";
     for (char c : matchedChars) {
       ret += c;
     }
@@ -144,5 +154,9 @@ public class CharacterMatcher extends RegexMatcher {
         break;
     }
     return getMatchedCharsString() + ending;
+  }
+
+  public RegexMatcher.MatchRepeat getRepeat() {
+    return repeat;
   }
 }

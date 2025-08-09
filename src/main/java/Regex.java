@@ -1,9 +1,7 @@
 import java.util.ArrayList;
 
-class Regex extends RegexMatcher {
+class Regex {
   ArrayList<MatcherSequence> matchSequences = new ArrayList<>();
-  ArrayList<Boolean> sequenceStartAtStart = new ArrayList<>();
-  ArrayList<Boolean> sequenceEndAtEnd = new ArrayList<>();
   int sequenceIndex = 0;
   int sequenceOffset = 0;
 
@@ -16,8 +14,6 @@ class Regex extends RegexMatcher {
     if (matchSequences.size() == 0) {
       currentSequence = new MatcherSequence();
       matchSequences.add(currentSequence);
-      sequenceStartAtStart.add(false);
-      sequenceEndAtEnd.add(false);
     } else {
       currentSequence = matchSequences.get(matchSequences.size() - 1);
     }
@@ -28,15 +24,15 @@ class Regex extends RegexMatcher {
           if (i < patternString.length() - 2 && patternString.charAt(i + 2) == '+') {
             currentSequence
                 .addMatcher(
-                    new CharacterMatcher(patternString.substring(i, i + 2), CharacterMatcher.MatchRepeat.ONEORMORE));
+                    new CharacterMatcher(patternString.substring(i, i + 2), RegexMatcher.MatchRepeat.ONEORMORE, this));
             i += 2;
           } else if (i < patternString.length() - 2 && patternString.charAt(i + 2) == '?') {
             currentSequence
                 .addMatcher(
-                    new CharacterMatcher(patternString.substring(i, i + 2), CharacterMatcher.MatchRepeat.ZEROORONE));
+                    new CharacterMatcher(patternString.substring(i, i + 2), RegexMatcher.MatchRepeat.ZEROORONE, this));
             i += 2;
           } else {
-            currentSequence.addMatcher(new CharacterMatcher(patternString.substring(i, i + 2)));
+            currentSequence.addMatcher(new CharacterMatcher(patternString.substring(i, i + 2), this));
             i++;
           }
           break;
@@ -50,32 +46,53 @@ class Regex extends RegexMatcher {
           if (i < patternString.length() - 1 && patternString.charAt(i + 1) == '+') {
             currentSequence
                 .addMatcher(
-                    new CharacterMatcher("", CharacterMatcher.MatchRepeat.ONEORMORE, true));
+                    new CharacterMatcher("", RegexMatcher.MatchRepeat.ONEORMORE, true, this));
             i++;
           } else if (i < patternString.length() - 1 && patternString.charAt(i + 1) == '?') {
             currentSequence
                 .addMatcher(
-                    new CharacterMatcher("", CharacterMatcher.MatchRepeat.ZEROORONE, true));
+                    new CharacterMatcher("", RegexMatcher.MatchRepeat.ZEROORONE, true, this));
             i++;
           } else {
-            currentSequence.addMatcher(new CharacterMatcher("", true));
+            currentSequence.addMatcher(new CharacterMatcher("", true, this));
           }
           break;
         case '[':
           int closeBracket = patternString.indexOf(']', i);
           if (patternString.charAt(i + 1) == '^') {
             String sub = patternString.substring(i + 2, closeBracket);
-            currentSequence.addMatcher(new CharacterMatcher(sub, true));
+            currentSequence.addMatcher(new CharacterMatcher(sub, true, this));
           } else {
             String sub = patternString.substring(i + 1, closeBracket);
-            currentSequence.addMatcher(new CharacterMatcher(sub));
+            currentSequence.addMatcher(new CharacterMatcher(sub, this));
           }
           i = closeBracket;
           break;
         case '(':
-          int closeParenth = patternString.indexOf(')', i);
-          currentSequence.addMatcher(new Regex(patternString.substring(i + 1, closeParenth)));
-          i = closeParenth;
+          int closeParenth = i;
+          int parenthCount = 1;
+          while (closeParenth < patternString.length() && parenthCount > 0) {
+            closeParenth++;
+            if (patternString.charAt(closeParenth) == '(') {
+              parenthCount++;
+            } else if (patternString.charAt(closeParenth) == ')') {
+              parenthCount--;
+            }
+          }
+          if (closeParenth < patternString.length() - 1 && patternString.charAt(closeParenth + 1) == '+') {
+            currentSequence
+                .addMatcher(new SubRegex(patternString.substring(i + 1, closeParenth),
+                    RegexMatcher.MatchRepeat.ONEORMORE, this));
+            i = closeParenth + 1;
+          } else if (closeParenth < patternString.length() - 1 && patternString.charAt(closeParenth + 1) == '?') {
+            currentSequence
+                .addMatcher(new SubRegex(patternString.substring(i + 1, closeParenth),
+                    RegexMatcher.MatchRepeat.ZEROORONE, this));
+            i = closeParenth + 1;
+          } else {
+            currentSequence.addMatcher(new SubRegex(patternString.substring(i + 1, closeParenth), this));
+            i = closeParenth;
+          }
           break;
         case '|':
           currentSequence = new MatcherSequence();
@@ -85,28 +102,28 @@ class Regex extends RegexMatcher {
           if (i < patternString.length() - 1 && patternString.charAt(i + 1) == '+') {
             currentSequence
                 .addMatcher(
-                    new CharacterMatcher(patternString.substring(i, i + 1), CharacterMatcher.MatchRepeat.ONEORMORE));
+                    new CharacterMatcher(patternString.substring(i, i + 1), RegexMatcher.MatchRepeat.ONEORMORE, this));
             i++;
           } else if (i < patternString.length() - 1 && patternString.charAt(i + 1) == '?') {
             currentSequence
                 .addMatcher(
-                    new CharacterMatcher(patternString.substring(i, i + 1), CharacterMatcher.MatchRepeat.ZEROORONE));
+                    new CharacterMatcher(patternString.substring(i, i + 1), RegexMatcher.MatchRepeat.ZEROORONE, this));
             i++;
           } else {
-            currentSequence.addMatcher(new CharacterMatcher(patternString.substring(i, i + 1)));
+            currentSequence.addMatcher(new CharacterMatcher(patternString.substring(i, i + 1), this));
           }
           break;
       }
     }
   }
 
-  public int firstMatch(String input, int startIndex, int seqOff) {
+  public int firstMatchStart(String input, int startIndex, int seqOff) {
     for (int i = 0; i < matchSequences.size(); i++) {
       if (matchSequences.get(i).startAtStart) {
         sequenceIndex = i;
         return 0;
       }
-      int idx = matchSequences.get(i).getMatcher(seqOff).firstMatch(input, startIndex);
+      int idx = matchSequences.get(i).getMatcher(seqOff).firstMatchStart(input, startIndex);
       if (idx != -1) {
         sequenceIndex = i;
         return idx;
@@ -115,62 +132,86 @@ class Regex extends RegexMatcher {
     return -1;
   }
 
-  public int firstMatch(String input, int startIndex) {
-    return firstMatch(input, startIndex, 0);
+  public int firstMatchStart(String input, int startIndex) {
+    return firstMatchStart(input, startIndex, 0);
   }
 
-  public int match(String input, int startIndex, int seqOff, Regex parent) {
-    sequenceOffset = seqOff;
-
-    int inputIndex = firstMatch(input, startIndex, sequenceOffset);
+  public Match initialMatch(String input) {
+    int inputIndex = firstMatchStart(input, 0, 0);
     if (inputIndex == -1) {
-      return -1;
+      return Match.invalid();
     }
+    return match(input, inputIndex, 0);
+  }
+
+  public Match match(String input, int startIndex, int seqOff) {
+    sequenceOffset = seqOff;
+    int inputIndex = startIndex;
 
     sequenceLoop: while (sequenceIndex < matchSequences.size()) {
-      while (sequenceOffset < currentSequence().matcherList.size() && inputIndex < input.length()) {
+      int beforeIndex = inputIndex;
+      while (sequenceOffset < currentSequence().size() && inputIndex < input.length()) {
         RegexMatcher matcher = currentSequence().getMatcher(sequenceOffset);
-        int newIndex = matcher.match(input, inputIndex, this);
-        if (newIndex == -1) {
-          if (sequenceIndex < matchSequences.size() - 1) {
-            sequenceIndex++;
-            sequenceOffset = 0;
-            continue sequenceLoop;
+        Match nextMatch = matcher.match(input, inputIndex);
+        if (nextMatch.isValid) {
+          if (nextMatch.match.length() == 0) {
+            inputIndex = nextMatch.endIndex;
           } else {
-            return -1;
+            inputIndex = nextMatch.endIndex + 1;
           }
-        } else {
-          inputIndex = newIndex;
+
           sequenceOffset++;
+        } else {
+          sequenceIndex++;
+          sequenceOffset = 0;
+          inputIndex = beforeIndex;
+          continue sequenceLoop;
         }
       }
-      if (sequenceOffset >= currentSequence().matcherList.size()) {
-        return currentSequence().endAtEnd && inputIndex < input.length() ? -1 : inputIndex + 1;
+      if (sequenceOffset >= currentSequence().size()) {
+        if (currentSequence().endAtEnd && inputIndex < input.length()) {
+          return Match.invalid();
+        } else {
+          return new Match(input, startIndex, inputIndex - 1);
+        }
       } else {
         if (inputIndex >= input.length()) {
-          return -1;
+          return Match.invalid();
         }
       }
     }
-    return -1;
+    return Match.invalid();
   }
 
-  public int match(String input, int startIndex, Regex parent) {
+  public Match match(String input, int startIndex) {
     sequenceIndex = 0;
-    return match(input, startIndex, 0, parent);
+    return match(input, startIndex, 0);
+  }
+
+  public boolean lookAhead(String input, int startIndex, int seqOff) {
+    int startSeqOff = sequenceOffset;
+    int startSeqInd = sequenceIndex;
+    Match match = match(input, startIndex, seqOff);
+    sequenceOffset = startSeqOff;
+    sequenceIndex = startSeqInd;
+    return match.isValid;
   }
 
   public MatcherSequence currentSequence() {
-    return matchSequences.get(sequenceIndex);
+    if (sequenceIndex < matchSequences.size()) {
+      return matchSequences.get(sequenceIndex);
+    } else {
+      return null;
+    }
   }
 
   public String toString() {
-    String ret = "(";
+    String ret = "";
     for (MatcherSequence sequence : matchSequences) {
       ret += sequence.toString();
       ret += "|";
     }
-    return ret.substring(0, ret.length() - 1) + ")";
+    return ret.substring(0, ret.length() - 1);
   }
 
   public String sequenceToString(int seqIndex) {
