@@ -1,3 +1,5 @@
+package old;
+
 import java.util.HashSet;
 
 public class CharacterMatcher implements RegexMatcher {
@@ -29,11 +31,11 @@ public class CharacterMatcher implements RegexMatcher {
       } else {
         if (i < chars.length() - 1 && chars.charAt(i + 1) == '-') {
           String correctRange;
-          if (lowercaseAlphabet.indexOf(thisChar) >= 0) {
+          if (isLowercaseLetter(thisChar)) {
             correctRange = lowercaseAlphabet;
-          } else if (uppercaseAlphabet.indexOf(thisChar) >= 0) {
+          } else if (isUppercaseLetter(thisChar)) {
             correctRange = uppercaseAlphabet;
-          } else if (digits.indexOf(thisChar) >= 0) {
+          } else if (isDigit(thisChar)) {
             correctRange = digits;
           } else {
             throw new IllegalArgumentException(
@@ -121,7 +123,7 @@ public class CharacterMatcher implements RegexMatcher {
         }
 
       default:
-        System.out.println(
+        System.err.println(
             "Invalid repeat property [" + repeat + "] on CharacterMatcher with characters " + getMatchedCharsString());
         return Match.invalid();
     }
@@ -131,8 +133,24 @@ public class CharacterMatcher implements RegexMatcher {
     return parent.currentSequence().indexOf(this) == parent.currentSequence().size() - 1;
   }
 
+  public RegexMatcher.MatchRepeat getRepeat() {
+    return repeat;
+  }
+
+  public static boolean isLowercaseLetter(char c) {
+    return lowercaseAlphabet.indexOf(c) >= 0;
+  }
+
+  public static boolean isUppercaseLetter(char c) {
+    return uppercaseAlphabet.indexOf(c) >= 0;
+  }
+
+  public static boolean isDigit(char c) {
+    return digits.indexOf(c) >= 0;
+  }
+
   String getMatchedCharsString() {
-    String ret = isNegative ? "+" : "";
+    String ret = isNegative ? "^" : "";
     for (char c : matchedChars) {
       ret += c;
     }
@@ -153,10 +171,6 @@ public class CharacterMatcher implements RegexMatcher {
         ending = "";
         break;
     }
-    return getMatchedCharsString() + ending;
-  }
-
-  public RegexMatcher.MatchRepeat getRepeat() {
-    return repeat;
+    return "[" + getMatchedCharsString() + "]" + ending;
   }
 }

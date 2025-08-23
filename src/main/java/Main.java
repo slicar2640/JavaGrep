@@ -1,15 +1,21 @@
 import java.util.Scanner;
 
+import grep.Pattern;
+import grep.PatternCompiler;
+
 public class Main {
   public static void main(String[] args) {
     if (args.length != 2 || !args[0].equals("-E")) {
-      System.out.println("Usage: ./your_program.sh -E <pattern>");
+      System.err.println("Usage: ./your_program.sh -E <pattern>");
       System.exit(1);
     }
 
     String pattern = args[1];
     Scanner scanner = new Scanner(System.in);
     String inputLine = scanner.nextLine();
+
+    System.out.println(inputLine);
+    System.out.println(pattern);
 
     if (matchPattern(inputLine, pattern)) {
       System.exit(0);
@@ -20,7 +26,14 @@ public class Main {
   }
 
   public static boolean matchPattern(String inputLine, String pattern) {
-    Regex regex = new Regex(pattern);
-    return regex.initialMatch(inputLine).isValid;
+    try {
+      Pattern regex = new PatternCompiler(pattern).compile();
+      System.out.println(regex.toString());
+      return regex.matches(inputLine);
+    } catch (StackOverflowError e) {
+      System.err.println(e.getClass().getName());
+      System.err.println(e.getStackTrace()[0]);
+      return false;
+    }
   }
 }

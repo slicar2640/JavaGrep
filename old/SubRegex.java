@@ -1,3 +1,5 @@
+package old;
+
 public class SubRegex extends Regex implements RegexMatcher {
   MatchRepeat repeat;
   Regex parent;
@@ -14,35 +16,45 @@ public class SubRegex extends Regex implements RegexMatcher {
     this.parent = parent;
   }
 
-  public Match match(String input, int startIndex, int seqOff) {
+  public Match match(String input, int startIndex, int seqOff, boolean isLookAhead) {
     sequenceOffset = seqOff;
 
     if (repeat == MatchRepeat.ONE) {
-      return matchOne(input, startIndex);
+      return matchOne(input, startIndex, isLookAhead);
     } else if (repeat == MatchRepeat.ONEORMORE) {
-      return matchOneOrMore(input, startIndex);
+      return matchOneOrMore(input, startIndex, isLookAhead);
     } else if (repeat == MatchRepeat.ZEROORONE) {
-      return matchZeroOrOne(input, startIndex);
+      return matchZeroOrOne(input, startIndex, isLookAhead);
     } else {
-      System.out.println("Invalid repeat value [" + repeat.toString() + "] for regex " + toString());
+      System.err.println("Invalid repeat value [" + repeat.toString() + "] for regex " + toString());
       return Match.invalid();
     }
   }
 
   public Match match(String input, int startIndex) {
     sequenceIndex = 0;
-    return match(input, startIndex, 0);
+    return match(input, startIndex, 0, false);
   }
 
-  private Match matchOne(String input, int startIndex) {
+  public Match match(String input, int startIndex, int seqOff) {
+    return match(input, startIndex, seqOff, false);
+  }
+
+  private Match matchOne(String input, int startIndex, boolean isLookAhead) {
     int inputIndex = startIndex;
 
     sequenceLoop: while (sequenceIndex < matchSequences.size()) {
       int beforeIndex = inputIndex;
       while (sequenceOffset < currentSequence().size() && inputIndex < input.length()) {
         RegexMatcher matcher = currentSequence().getMatcher(sequenceOffset);
+        if (matcher instanceof BackReferenceMatcher && isLookAhead) {
+          return new Match(input, startIndex, inputIndex);
+        }
         Match nextMatch = matcher.match(input, inputIndex);
         if (nextMatch.isValid) {
+          if (matcher instanceof SubRegex) {
+            captureGroups.add(nextMatch.match);
+          }
           if (nextMatch.match.length() == 0) {
             inputIndex = nextMatch.endIndex;
           } else {
@@ -77,11 +89,11 @@ public class SubRegex extends Regex implements RegexMatcher {
     return Match.invalid();
   }
 
-  private Match matchOneOrMore(String input, int startIndex) {
+  private Match matchOneOrMore(String input, int startIndex, boolean isLookAhead) {
     int inputIndex = startIndex;
 
     while (inputIndex < input.length()) {
-      Match nextMatch = matchOne(input, inputIndex);
+      Match nextMatch = matchOne(input, inputIndex, isLookAhead);
       if (!nextMatch.isValid) {
         break;
       }
@@ -99,9 +111,9 @@ public class SubRegex extends Regex implements RegexMatcher {
     return Match.invalid();
   }
 
-  private Match matchZeroOrOne(String input, int startIndex) {
+  private Match matchZeroOrOne(String input, int startIndex, boolean isLookAhead) {
     if (lastOfParentSequence()) {
-      Match m1 = matchOne(input, startIndex);
+      Match m1 = matchOne(input, startIndex, isLookAhead);
       if (m1.isValid) {
         return m1;
       } else {
@@ -111,7 +123,7 @@ public class SubRegex extends Regex implements RegexMatcher {
       if (parent.lookAhead(input, startIndex, parent.currentSequence().indexOf(this) + 1)) {
         return Match.empty(startIndex);
       } else {
-        return matchOne(input, startIndex);
+        return matchOne(input, startIndex, isLookAhead);
       }
     }
   }

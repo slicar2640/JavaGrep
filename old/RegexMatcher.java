@@ -1,3 +1,5 @@
+package old;
+
 public interface RegexMatcher {
   public int firstMatchStart(String input, int startIndex);
 

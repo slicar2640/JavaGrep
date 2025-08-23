@@ -1,3 +1,5 @@
+package old;
+
 import java.util.ArrayList;
 
 public class MatcherSequence {
@@ -31,7 +33,7 @@ public class MatcherSequence {
 
   public String toString() {
     String ret = startAtStart ? "^" : "";
-    for(RegexMatcher matcher : matcherList) {
+    for (RegexMatcher matcher : matcherList) {
       ret += matcher.toString();
     }
     return ret + (endAtEnd ? "$" : "");

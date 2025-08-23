@@ -1,9 +1,12 @@
+package old;
+
 import java.util.ArrayList;
 
 class Regex {
   ArrayList<MatcherSequence> matchSequences = new ArrayList<>();
   int sequenceIndex = 0;
   int sequenceOffset = 0;
+  ArrayList<String> captureGroups = new ArrayList<>();
 
   public Regex(String patternString) {
     parsePattern(patternString);
@@ -21,7 +24,18 @@ class Regex {
     for (int i = 0; i < patternString.length(); i++) {
       switch (patternString.charAt(i)) {
         case '\\':
-          if (i < patternString.length() - 2 && patternString.charAt(i + 2) == '+') {
+          if (CharacterMatcher.isDigit(patternString.charAt(i + 1))) {
+            String num = "";
+            for (int j = i + 1; j < patternString.length(); j++) {
+              if (CharacterMatcher.isDigit(patternString.charAt(j))) {
+                num += patternString.charAt(j);
+              } else {
+                break;
+              }
+            }
+            currentSequence.addMatcher(new BackReferenceMatcher(Integer.parseInt(num) - 1, this));
+            i += num.length();
+          } else if (i < patternString.length() - 2 && patternString.charAt(i + 2) == '+') {
             currentSequence
                 .addMatcher(
                     new CharacterMatcher(patternString.substring(i, i + 2), RegexMatcher.MatchRepeat.ONEORMORE, this));
@@ -59,14 +73,21 @@ class Regex {
           break;
         case '[':
           int closeBracket = patternString.indexOf(']', i);
-          if (patternString.charAt(i + 1) == '^') {
-            String sub = patternString.substring(i + 2, closeBracket);
-            currentSequence.addMatcher(new CharacterMatcher(sub, true, this));
+          boolean negative = patternString.charAt(i + 1) == '^';
+          String sub = patternString.substring(i + (negative ? 2 : 1), closeBracket);
+
+          if (closeBracket < patternString.length() - 1 && patternString.charAt(closeBracket + 1) == '+') {
+            currentSequence
+                .addMatcher(new CharacterMatcher(sub, RegexMatcher.MatchRepeat.ONEORMORE, negative, this));
+            i = closeBracket + 1;
+          } else if (closeBracket < patternString.length() - 1 && patternString.charAt(closeBracket + 1) == '?') {
+            currentSequence
+                .addMatcher(new CharacterMatcher(sub, RegexMatcher.MatchRepeat.ZEROORONE, negative, this));
+            i = closeBracket + 1;
           } else {
-            String sub = patternString.substring(i + 1, closeBracket);
-            currentSequence.addMatcher(new CharacterMatcher(sub, this));
+            currentSequence.addMatcher(new CharacterMatcher(sub, negative, this));
+            i = closeBracket;
           }
-          i = closeBracket;
           break;
         case '(':
           int closeParenth = i;
@@ -144,7 +165,7 @@ class Regex {
     return match(input, inputIndex, 0);
   }
 
-  public Match match(String input, int startIndex, int seqOff) {
+  public Match match(String input, int startIndex, int seqOff, boolean isLookAhead) {
     sequenceOffset = seqOff;
     int inputIndex = startIndex;
 
@@ -152,14 +173,19 @@ class Regex {
       int beforeIndex = inputIndex;
       while (sequenceOffset < currentSequence().size() && inputIndex < input.length()) {
         RegexMatcher matcher = currentSequence().getMatcher(sequenceOffset);
+        if (matcher instanceof BackReferenceMatcher && isLookAhead) {
+          return new Match(input, startIndex, inputIndex);
+        }
         Match nextMatch = matcher.match(input, inputIndex);
         if (nextMatch.isValid) {
+          if (matcher instanceof SubRegex) {
+            captureGroups.add(nextMatch.match);
+          }
           if (nextMatch.match.length() == 0) {
             inputIndex = nextMatch.endIndex;
           } else {
             inputIndex = nextMatch.endIndex + 1;
           }
-
           sequenceOffset++;
         } else {
           sequenceIndex++;
@@ -185,13 +211,17 @@ class Regex {
 
   public Match match(String input, int startIndex) {
     sequenceIndex = 0;
-    return match(input, startIndex, 0);
+    return match(input, startIndex, 0, false);
+  }
+
+  public Match match(String input, int startIndex, int seqOff) {
+    return match(input, startIndex, seqOff, false);
   }
 
   public boolean lookAhead(String input, int startIndex, int seqOff) {
     int startSeqOff = sequenceOffset;
     int startSeqInd = sequenceIndex;
-    Match match = match(input, startIndex, seqOff);
+    Match match = match(input, startIndex, seqOff, true);
     sequenceOffset = startSeqOff;
     sequenceIndex = startSeqInd;
     return match.isValid;

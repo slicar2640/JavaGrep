@@ -8,17 +8,10 @@
 
 set -e # Exit early if any commands fail
 
-# Copied from .codecrafters/compile.sh
-#
-# - Edit this to change how your program compiles locally
-# - Edit .codecrafters/compile.sh to change how your program compiles remotely
-(
-  cd "$(dirname "$0")" # Ensure compile steps are run within the repository directory
-  mvn -q -B package -Ddir=/tmp/codecrafters-build-grep-java
-)
+PATTERN="$2"
+INPUT="${1:-dog}" # default to "dog" if not provided
 
-# Copied from .codecrafters/run.sh
-#
-# - Edit this to change how your program runs locally
-# - Edit .codecrafters/run.sh to change how your program runs remotely
-exec java -jar /tmp/codecrafters-build-grep-java/codecrafters-grep.jar "$@"
+echo "$INPUT" | /usr/bin/env /usr/lib/jvm/jdk-21.0.5-oracle-x64/bin/java \
+  -XX:+ShowCodeDetailsInExceptionMessages \
+  -cp /home/theslinkers2011/codecrafters-grep-java/target/classes \
+  Main -E "$PATTERN"
