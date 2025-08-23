@@ -6,10 +6,11 @@ import grep.rule.MatchRule;
 
 public class Pattern {
   public MatchRule rootRule;
+  public int numCaptureGroups = 0;
 
   public Pattern(ArrayList<MatchRule> rules) {
     rootRule = rules.get(0);
-    rootRule.connect(rules, 1);
+    rootRule.connect(rules, 1, this);
   }
 
   public boolean matches(String input) {

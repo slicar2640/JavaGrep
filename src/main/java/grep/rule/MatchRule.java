@@ -3,9 +3,11 @@ package grep.rule;
 import java.util.ArrayList;
 
 import grep.MatchContext;
+import grep.Pattern;
 
 public abstract class MatchRule {
   public MatchRule next;
+  public Pattern pattern;
   public static final MatchRule END = new MatchRule() {
     public boolean selfMatches(String input, int index, MatchContext context) {
       return true;
@@ -21,7 +23,8 @@ public abstract class MatchRule {
     }
 
     @Override
-    public void connect(ArrayList<MatchRule> rules, int index) {
+    public void connect(ArrayList<MatchRule> rules, int index, Pattern pattern) {
+      this.pattern = pattern;
       next = null;
     }
   };
@@ -40,13 +43,14 @@ public abstract class MatchRule {
     }
   }
 
-  public void connect(ArrayList<MatchRule> rules, int index) {
+  public void connect(ArrayList<MatchRule> rules, int index, Pattern pattern) {
+    this.pattern = pattern;
     if (index >= rules.size()) {
       next = END;
       return;
     }
     next = rules.get(index);
-    next.connect(rules, index + 1);
+    next.connect(rules, index + 1, pattern);
   }
 
   public void setNext(MatchRule rule) {

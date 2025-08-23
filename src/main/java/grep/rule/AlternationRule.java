@@ -3,6 +3,7 @@ package grep.rule;
 import java.util.ArrayList;
 
 import grep.MatchContext;
+import grep.Pattern;
 
 public class AlternationRule extends MatchRule {
   private ArrayList<CaptureGroup> groups = new ArrayList<>();
@@ -14,7 +15,8 @@ public class AlternationRule extends MatchRule {
   }
 
   @Override
-  public void connect(ArrayList<MatchRule> rules, int index) {
+  public void connect(ArrayList<MatchRule> rules, int index, Pattern pattern) {
+    this.pattern = pattern;
     if (index >= rules.size()) {
       next = MatchRule.END;
     } else {
@@ -23,8 +25,10 @@ public class AlternationRule extends MatchRule {
     System.out.println(next.toString());
     for (CaptureGroup g : groups) {
       g.setNext(next);
+      g.captureIndex = pattern.numCaptureGroups;
     }
-    next.connect(rules, index + 1);
+    pattern.numCaptureGroups++;
+    next.connect(rules, index + 1, pattern);
   }
 
   @Override
@@ -36,14 +40,10 @@ public class AlternationRule extends MatchRule {
   }
 
   public boolean selfMatches(String input, int index, MatchContext context) {
-    String[] captureRefs = context.captureRefs.clone();
-    int lastCap = context.lastCapture;
     int lastMatch = context.lastMatch;
     for (CaptureGroup g : groups) {
       if (index < input.length())
         System.out.println(g + " / " + input.charAt(index));
-      context.captureRefs = captureRefs.clone();
-      context.lastCapture = lastCap;
       context.lastMatch = lastMatch;
       if (g.selfMatches(input, index, context)) {
         return true;
@@ -53,11 +53,9 @@ public class AlternationRule extends MatchRule {
   }
 
   public boolean matches(String input, int index, MatchContext context) {
-    String[] captureRefs = context.captureRefs.clone();
-    int lastCap = context.lastCapture;
+    int lastMatch = context.lastMatch;
     for (CaptureGroup g : groups) {
-      context.captureRefs = captureRefs.clone();
-      context.lastCapture = lastCap;
+      context.lastMatch = lastMatch;
       if (g.matches(input, index, context)) {
         return true;
       }

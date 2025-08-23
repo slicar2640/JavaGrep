@@ -1,23 +1,33 @@
 package grep.rule;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.NoSuchElementException;
 
 import grep.MatchContext;
+import grep.Pattern;
 
 public class CaptureGroup extends MatchRule {
   private ArrayList<MatchRule> rules = new ArrayList<>();
   boolean isMatching = false;
   int startOfMatch = 0, endOfMatch = 0;
+  int captureIndex = -1;
+
+  @Override
+  public void connect(ArrayList<MatchRule> rules, int index, Pattern pattern) {
+    captureIndex = pattern.numCaptureGroups;
+    pattern.numCaptureGroups++;
+    super.connect(rules, index, pattern);
+  }
 
   public boolean matches(String input, int index, MatchContext context) {
     if (isMatching) {
-      context.addCaptureRef(input.substring(startOfMatch, index));
-      int capIndex = context.lastCapture;
+      context.addCaptureRef(captureIndex, input.substring(startOfMatch, index));
       System.out.println("<" + input.substring(startOfMatch, index) + ">");
+      System.out.println(Arrays.toString(context.captureRefs));
       boolean nextMatches = next.matches(input, index, context);
       System.out.println("nm " + nextMatches);
-      context.removeCaptureRef(capIndex);
+      context.removeCaptureRef(captureIndex);
       endOfMatch = index;
       return nextMatches;
     } else {
@@ -27,7 +37,8 @@ public class CaptureGroup extends MatchRule {
       if (rules.get(0).matches(input, index, context)) {
         context.lastMatch = endOfMatch;
         System.out.println("<s> " + input.substring(index, context.lastMatch));
-        context.addCaptureRef(input.substring(index, context.lastMatch));
+        context.addCaptureRef(captureIndex, input.substring(index, context.lastMatch));
+        System.out.println(Arrays.toString(context.captureRefs));
         didMatch = next.matches(input, context.lastMatch, context);
       }
       isMatching = false;

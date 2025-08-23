@@ -3,6 +3,7 @@ package grep.rule.quantifier;
 import java.util.ArrayList;
 
 import grep.MatchContext;
+import grep.Pattern;
 import grep.rule.MatchRule;
 
 public class MatchOneOrMore extends MatchRule {
@@ -13,8 +14,8 @@ public class MatchOneOrMore extends MatchRule {
   }
 
   @Override
-  public void connect(ArrayList<MatchRule> rules, int index) {
-    super.connect(rules, index);
+  public void connect(ArrayList<MatchRule> rules, int index, Pattern pattern) {
+    super.connect(rules, index, pattern);
     baseRule.setNext(MatchRule.END);
   }
 
