@@ -7,7 +7,7 @@ import grep.Pattern;
 import grep.rule.MatchRule;
 
 public class MatchOneOrMore extends MatchRule {
-  private MatchRule baseRule;
+  public MatchRule baseRule;
 
   public MatchOneOrMore(MatchRule baseRule) {
     this.baseRule = baseRule;
@@ -32,14 +32,11 @@ public class MatchOneOrMore extends MatchRule {
   @Override
   public boolean matches(String input, int index, MatchContext context) {
     while (index < input.length()) {
-      System.out.println(baseRule + " " + input.charAt(index));
       if (baseRule.selfMatches(input, index, context)) {
-        System.out.println(next);
         if (index == context.lastMatch) {
           return false;
         }
         index = context.lastMatch;
-        System.out.println("-----" + index);
         if (next.matches(input, index, context)) {
           return true;
         }

@@ -29,7 +29,6 @@ public class CharacterRule extends MatchRule {
     }
     if (matchedChars.contains(input.charAt(index)) ^ !positiveMatch) {
       context.lastMatch = index + 1;
-      System.out.println(toString() + " " + input.charAt(index) + " " + context.lastMatch);
       return true;
     } else {
       return false;

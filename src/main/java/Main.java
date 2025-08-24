@@ -14,9 +14,6 @@ public class Main {
     Scanner scanner = new Scanner(System.in);
     String inputLine = scanner.nextLine();
 
-    System.out.println(inputLine);
-    System.out.println(pattern);
-
     if (matchPattern(inputLine, pattern)) {
       System.exit(0);
     } else {
@@ -28,7 +25,6 @@ public class Main {
   public static boolean matchPattern(String inputLine, String pattern) {
     try {
       Pattern regex = new PatternCompiler(pattern).compile();
-      System.out.println(regex.toString());
       return regex.matches(inputLine);
     } catch (StackOverflowError e) {
       System.err.println(e.getClass().getName());

@@ -7,7 +7,7 @@ import grep.Pattern;
 import grep.rule.MatchRule;
 
 public class MatchZeroOrOne extends MatchRule {
-  private MatchRule baseRule;
+  public MatchRule baseRule;
 
   public MatchZeroOrOne(MatchRule baseRule) {
     this.baseRule = baseRule;
@@ -32,16 +32,6 @@ public class MatchZeroOrOne extends MatchRule {
     return baseRule.selfMatches(input, index, context) && next.matches(input,
         context.lastMatch, context)
         || next.matches(input, index, context);
-    // boolean nextMatches;
-    // if (baseRule.selfMatches(input, index, context)) {
-    // System.out.println("A");
-    // nextMatches = next.matches(input, context.lastMatch, context);
-    // } else {
-    // System.out.println("B");
-    // nextMatches = next.matches(input, index, context);
-    // }
-    // System.out.println(nextMatches);
-    // return nextMatches;
   }
 
   public String toString() {

@@ -2,7 +2,10 @@ package grep;
 
 import java.util.ArrayList;
 
+import grep.rule.CaptureGroup;
 import grep.rule.MatchRule;
+import grep.rule.quantifier.MatchOneOrMore;
+import grep.rule.quantifier.MatchZeroOrOne;
 
 public class Pattern {
   public MatchRule rootRule;
@@ -11,6 +14,19 @@ public class Pattern {
   public Pattern(ArrayList<MatchRule> rules) {
     rootRule = rules.get(0);
     rootRule.connect(rules, 1, this);
+    for (MatchRule rule : rules) {
+      if (rule instanceof CaptureGroup cap) {
+        cap.setCaptureIndex(this);
+      } else if (rule instanceof MatchOneOrMore mat) {
+        if (mat.baseRule instanceof CaptureGroup cap) {
+          cap.setCaptureIndex(this);
+        }
+      } else if (rule instanceof MatchZeroOrOne mat) {
+        if (mat.baseRule instanceof CaptureGroup cap) {
+          cap.setCaptureIndex(this);
+        }
+      }
+    }
   }
 
   public boolean matches(String input) {

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import grep.MatchContext;
 import grep.Pattern;
 
-public class AlternationRule extends MatchRule {
+public class AlternationRule extends CaptureGroup {
   private ArrayList<CaptureGroup> groups = new ArrayList<>();
 
   public AlternationRule(CaptureGroup... groups) {
@@ -16,18 +16,14 @@ public class AlternationRule extends MatchRule {
 
   @Override
   public void connect(ArrayList<MatchRule> rules, int index, Pattern pattern) {
-    this.pattern = pattern;
     if (index >= rules.size()) {
       next = MatchRule.END;
     } else {
       next = rules.get(index);
     }
-    System.out.println(next.toString());
     for (CaptureGroup g : groups) {
       g.setNext(next);
-      g.captureIndex = pattern.numCaptureGroups;
     }
-    pattern.numCaptureGroups++;
     next.connect(rules, index + 1, pattern);
   }
 
@@ -43,8 +39,7 @@ public class AlternationRule extends MatchRule {
     int lastMatch = context.lastMatch;
     for (CaptureGroup g : groups) {
       if (index < input.length())
-        System.out.println(g + " / " + input.charAt(index));
-      context.lastMatch = lastMatch;
+        context.lastMatch = lastMatch;
       if (g.selfMatches(input, index, context)) {
         return true;
       }
@@ -56,8 +51,12 @@ public class AlternationRule extends MatchRule {
     int lastMatch = context.lastMatch;
     for (CaptureGroup g : groups) {
       context.lastMatch = lastMatch;
-      if (g.matches(input, index, context)) {
-        return true;
+      if (g.selfMatches(input, index, context)) {
+        context.addCaptureRef(captureIndex, input.substring(index, context.lastMatch));
+        context.lastMatch = lastMatch;
+        if (g.matches(input, index, context)) {
+          return true;
+        }
       }
     }
     return false;
@@ -75,6 +74,15 @@ public class AlternationRule extends MatchRule {
     if (next != null) {
       group.setNext(next);
     }
+  }
+
+  public void setCaptureIndex(Pattern pattern) {
+    captureIndex = pattern.numCaptureGroups;
+    for (CaptureGroup group : groups) {
+      group.setCaptureIndex(pattern);
+      pattern.numCaptureGroups--;
+    }
+    pattern.numCaptureGroups++;
   }
 
   public String toString() {
