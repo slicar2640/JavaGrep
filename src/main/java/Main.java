@@ -20,18 +20,24 @@ public class Main {
       scanner.close();
     } else {
       boolean foundOne = false;
-      String filepath = args[2];
-      try (Scanner scanner = new Scanner(new File(filepath))) {
-        while (scanner.hasNextLine()) {
-          String inputLine = scanner.nextLine();
-          if (pattern.matches(inputLine)) {
-            foundOne = true;
-            System.out.println(inputLine);
+      for (int i = 2; i < args.length; i++) {
+        String filepath = args[i];
+        try (Scanner scanner = new Scanner(new File(filepath))) {
+          while (scanner.hasNextLine()) {
+            String inputLine = scanner.nextLine();
+            if (pattern.matches(inputLine)) {
+              foundOne = true;
+              if (args.length > 3) {
+                System.out.println(filepath + ":" + inputLine);
+              } else {
+                System.out.println(inputLine);
+              }
+            }
           }
+        } catch (Exception e) {
+          e.printStackTrace();
+          System.exit(1);
         }
-      } catch (Exception e) {
-        e.printStackTrace();
-        System.exit(1);
       }
       if (foundOne) {
         System.exit(0);
