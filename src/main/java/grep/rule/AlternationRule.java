@@ -76,7 +76,7 @@ public class AlternationRule extends CaptureGroup {
     }
   }
 
-  public void setCaptureIndex(Pattern pattern) {
+  public void setCaptureIndex(Pattern pattern) { // (1|1|1(2)|(3)|1)
     captureIndex = pattern.numCaptureGroups;
     for (CaptureGroup group : groups) {
       group.setCaptureIndex(pattern);

@@ -15,8 +15,14 @@ public class MatchZeroOrOne extends MatchRule {
 
   @Override
   public void connect(ArrayList<MatchRule> rules, int index, Pattern pattern) {
-    baseRule.setNext(MatchRule.END);
     super.connect(rules, index, pattern);
+    baseRule.setNext(MatchRule.END);
+  }
+
+  @Override
+  public void setNext(MatchRule rule) {
+    super.setNext(rule);
+    baseRule.setNext(rule);
   }
 
   public boolean selfMatches(String input, int index, MatchContext context) {

@@ -13,7 +13,7 @@ public class CaptureGroup extends MatchRule {
   int captureIndex = -1;
 
   public boolean matches(String input, int index, MatchContext context) {
-    if (isMatching) {
+    if (isMatching) { // Called once all of this group's rules have checked themselves
       context.addCaptureRef(captureIndex, input.substring(startOfMatch, index));
       boolean nextMatches = next.matches(input, index, context);
       endOfMatch = index;
@@ -23,7 +23,7 @@ public class CaptureGroup extends MatchRule {
       startOfMatch = index;
       boolean didMatch = false;
       if (rules.get(0).matches(input, index, context)) {
-        context.lastMatch = endOfMatch;
+        context.lastMatch = endOfMatch; // Set in above case (end of rules list)
         context.addCaptureRef(captureIndex, input.substring(index, context.lastMatch));
         didMatch = next.matches(input, context.lastMatch, context);
       }

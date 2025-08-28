@@ -13,7 +13,7 @@ import grep.PatternCompiler;
 
 public class Main {
   public static void main(String[] args) {
-    if (args.length == 2) {
+    if (args.length == 2) { // -E "pattern"
       Pattern pattern = new PatternCompiler(args[1]).compile();
       Scanner scanner = new Scanner(System.in);
       String inputLine = scanner.nextLine();
@@ -24,7 +24,7 @@ public class Main {
         System.exit(1);
       }
       scanner.close();
-    } else {
+    } else { // (-r) -E "pattern" (...files)
       String firstFlag = args[0];
       if (firstFlag.equals("-E")) {
         Pattern pattern = new PatternCompiler(args[1]).compile();
@@ -84,16 +84,13 @@ public class Main {
                 System.out.println(currentPath.toString() + ":" + inputLine);
               }
             }
-          } catch (Exception e) {
-            e.printStackTrace();
-            System.exit(2);
           }
         }
       } catch (IOException e) {
         e.printStackTrace();
         System.exit(2);
       }
-    } else {
+    } else { // Regular File, search normally
       searchTextFiles(pattern, filepath);
     }
     if (foundOne) {
